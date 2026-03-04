@@ -5,10 +5,10 @@
 //设置执行字符集为UTF-8,防止中文乱码
 #include <QTcpServer>//tcp服务器类
 #include <QFile> //文件操作类
-#include <QtNetwork>
-#include <QDateTime>
-#include <QMessageBox>
-#include <QDebug>
+#include <QtNetwork>//Qt网络模块核心类
+#include <QDateTime>//日期时间处理类
+#include <QMessageBox>//消息提示框
+#include <QDebug>//调试输出
 #include <QPainter>  //绘图工具类
 
 
@@ -43,7 +43,7 @@ public:
     void paintEvent(QPaintEvent *ev);  //重绘事件处理(设置窗口背景)
 
 protected:
-    //时间处理
+    //事件处理
     void closeEvent(QCloseEvent *event);//窗口关闭事件处理(停止监听并释放资源)
 private slots:
     //TCP服务器相关槽函数
@@ -69,7 +69,7 @@ private slots:
 
     void on_pushButton_ExitSystem_clicked();
 
-    void on_pushButton_CleanMes_clicked();
+    void on_pushButton_ClearMsg_clicked();
 
     void on_pushButton_SendMsg_clicked();
 
