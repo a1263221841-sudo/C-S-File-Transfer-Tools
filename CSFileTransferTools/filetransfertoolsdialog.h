@@ -50,7 +50,7 @@ private slots:
     void OnNewConnectionFunc();//处理新连接请求(当有客户端连接时触发)
 
     //文本通道槽函数
-    void OnClientConnectedFunc();  //文本socket连接成功处理
+    //void OnClientConnectedFunc();  //文本socket连接成功处理
     void OnClientDisconnectedFunc();//文本socket断开连接处理
     void OnSocketReadyReadFunc();//读取客户端发送的文本数据
 
