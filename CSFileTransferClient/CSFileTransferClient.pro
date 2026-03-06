@@ -1,5 +1,6 @@
 QT       += core gui
-
+#添加网络模块的指令通过添加这个指令,你可以在项目中进行网络通信,HTTP请示,Socket编程等操作
+QT += network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -17,15 +18,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    maindialog.cpp
 
 HEADERS += \
-    mainwindow.h
+    maindialog.h
 
 FORMS += \
-    mainwindow.ui
+    maindialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    Resources.qrc
