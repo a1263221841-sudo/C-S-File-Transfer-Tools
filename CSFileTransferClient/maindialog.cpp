@@ -190,7 +190,34 @@ void MainDialog::UpdateClientProgressFunc(qint64 numBytes) // 文件传输及显
 
         if(m_BytesWrites>0)
         {
+            //从文件当中取出数据到发送缓冲区,每次发送文件大小的数据,设置为4kb
+            //如果剩下的数据不满足4kb,就发送剩下的数据大小
+            m_OutDataBlock=m_LocalFiles->read(qMin(m_BytesWrites,m_LoadSizes));
 
+            //从发送缓冲区发送数据,计算发送完一次数据还剩下数据的大小
+            m_BytesToWrite=m_BytesToWrite-(int)m_TcpFileClient->write(m_OutDataBlock);
+
+            //清空发送缓冲区的数据信息
+            m_OutDataBlock.resize(0);
+
+        }
+        else
+        {
+            m_LocalFiles->close();//没有数据发送了,则直接关闭文件
+
+        }
+
+        //进度条更新状态
+        ui->progressBar->setMaximum(m_TotalBytes);
+        ui->progressBar->setValue(m_BytesWrites);
+
+        //发送数据大小.等于数据的总大小
+        if(m_BytesWrites==m_TotalBytes)
+        {
+            ui->plainTextEdit_MsgList->appendPlainText(QString("[%1 *******文件已经成功传输到服务器 : %2 成功*****").arg(strDateTimes)
+                                                       .(m_FileNames));
+
+            m_LocalFiles->close();
         }
 }
 void MainDialog::DisplayErrorFunc(QAbstractSocket::SocketError) // 异常处理信息
