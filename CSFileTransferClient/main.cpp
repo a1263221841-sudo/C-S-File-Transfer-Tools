@@ -35,6 +35,9 @@ int main(int argc, char *argv[])
             return 1;
         }
     MainDialog w;
+
+    //显示窗口最小化按扭
+    w.setWindowFlags(w.windowFlags()|Qt::WindowMinimizeButtonHint);
     w.show();
     return a.exec();
 }

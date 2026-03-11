@@ -64,6 +64,8 @@ MainDialog::MainDialog(QWidget *parent)
     //当有数据发送成功的时,更新进度条状态
     connect(m_TcpFileClient,&QTcpSocket::bytesWritten,this,&MainDialog::UpdateClientProgressFunc);
 
+    //调用系统托盘技术
+   // MySystemTrayFunc();
 }
 
 MainDialog::~MainDialog()
@@ -208,14 +210,13 @@ void MainDialog::UpdateClientProgressFunc(qint64 numBytes) // 文件传输及显
         }
 
         //进度条更新状态
-        ui->progressBar->setMaximum(m_TotalBytes);
+        ui->progressBar->setMaximum(m_TotalBytes);  
         ui->progressBar->setValue(m_BytesWrites);
 
         //发送数据大小.等于数据的总大小
         if(m_BytesWrites==m_TotalBytes)
         {
-            ui->plainTextEdit_MsgList->appendPlainText(QString("[%1 *******文件已经成功传输到服务器 : %2 成功*****").arg(strDateTimes)
-                                                       .(m_FileNames));
+             ui->plainTextEdit_MsgList->appendPlainText(QString("[%1******文件已经成功传输到服务器：%2 成功******]").arg(strDateTimes).arg(m_FileNames));
 
             m_LocalFiles->close();
         }
@@ -300,11 +301,56 @@ void MainDialog::on_pushButton_SendMsg_clicked()
 }
 void MainDialog::on_pushButton_SelectFile_clicked()
 {
+    // 日期时间处理操作
+        QDateTime CurrentDataTime=QDateTime::currentDateTime();
+        QString strYear=QString::number(CurrentDataTime.date().year());
+        QString strMonth=QString::number(CurrentDataTime.date().month());
+        QString strDay=QString::number(CurrentDataTime.date().day());
+        QString strHour=QString::number(CurrentDataTime.time().hour());
+        QString strMinute=QString::number(CurrentDataTime.time().minute());
+        QString strSecond=QString::number(CurrentDataTime.time().second());
+
+        // 将年月日时分秒6个字符串连接
+        QString strDateTimes=strYear+"/"+strMonth+"/"+strDay+" "+strHour+":"+strMinute+":"+strSecond;
+
+        m_FileNames=QFileDialog::getOpenFileName(this,"请选择要传输的文件");
+        if(!m_FileNames.isEmpty())
+        {
+            ui->plainTextEdit_MsgList->appendPlainText(QString("[%1 客户端打开文件为 : %2 成功").arg(strDateTimes).arg(m_FileNames));
+            ui->pushButton_SendFile->setEnabled(true);//启用{发送文件}命令按扭
+        }
 
 }
 
 void MainDialog::on_pushButton_SendFile_clicked()
 {
+        m_LocalFiles=new QFile(m_FileNames);
+        if(!m_LocalFiles->open(QFile::ReadOnly))
+        {
+            qDebug()<<"打开文件错误,请重新检查?"<<endl;
+            return;
+        }
+        m_TotalBytes=m_LocalFiles->size();
+
+        QDataStream sendDataOut(&m_OutDataBlock,QIODevice::WriteOnly);
+        QString strCurrentFileName=m_FileNames.right(m_FileNames.size()-m_FileNames.lastIndexOf('/')-1);
+
+        //依次写入文件总大小的信息空间,文件名,大小信息空间,文件名
+        sendDataOut<<qint64(0)<<qint64(0)<<strCurrentFileName;
+
+        //总大小是文件名大小等信息和实际文件大小的总和
+        m_TotalBytes=m_TotalBytes+m_OutDataBlock.size();
+
+        sendDataOut.device()->seek(0);
+
+        //返回sendDataOut的开始,用实际的大小信息代替两个qint64(0)空间
+        //这两个占位符分别用来存放整个数据包的总大小和头部信息的长度，现在先用 0 占位，稍后回填。
+        sendDataOut<<m_TotalBytes<<qint64((m_OutDataBlock.size()-sizeof(qint64)*2));
+
+        //发送完前面数据之后,剩下数据的大小
+        m_BytesToWrite=m_BytesToWrite-m_TcpFileClient->write(m_OutDataBlock);
+
+        m_OutDataBlock.resize(0);
 
 }
 

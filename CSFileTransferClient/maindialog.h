@@ -22,6 +22,11 @@
 //是Qt提供用于绘制图形和图像工具类头文件
 #include<QPainter>
 
+// 系统托盘相关的头文件
+#include <QSystemTrayIcon>
+#include <QAction>
+#include <QMenu>
+
 #include "ui_maindialog.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainDialog; }
@@ -62,7 +67,7 @@ private slots:
     void UpdateClientProgressFunc(qint64); // 文件传输及显示进度条更新
     void DisplayErrorFunc(QAbstractSocket::SocketError); // 异常处理信息
 
-
+    void MySystemTrayFunc(); // 系统托盘函数
 
 
         void on_pushButton_ConnectServer_clicked();
