@@ -31,7 +31,7 @@ public:
     QTcpSocket *P_TCPFileScoketObject;   //文件传输socket对象指针(处理文件传输)
 
     //文件传输相关成员变量
-    qint64 m_FileTotalBytes;  //文件总字体数
+    qint64 m_FileTotalBytes;  //文件总字节数
     qint64 m_FileBytesReceived; //已接收文件字节数
     qint64 m_FileNameSizes;   //文件名称长度(字节)
     qint64 m_FileNames;    //接收的文件名
