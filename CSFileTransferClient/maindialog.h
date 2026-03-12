@@ -57,6 +57,16 @@ private:
     QString GetLocalIPAddress();//获取本机的Ip地址
     void closeEvent(QCloseEvent *event);//关闭事件
 
+
+    //系统托盘
+    QSystemTrayIcon *MySystemTrays;//托盘指针
+    QMenu *pContextMenu;//托盘菜单
+
+    QAction *qMiniAction;//客户端最小化
+    QAction *qRestoreAction;//恢复客户端
+    QAction *qExitAction; //退出系统
+
+
     //自定义槽函数
 private slots:
     void OnConnectedFunc();//客户端连接服务器
