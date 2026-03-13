@@ -34,7 +34,7 @@ public:
     qint64 m_FileTotalBytes;  //文件总字节数
     qint64 m_FileBytesReceived; //已接收文件字节数
     qint64 m_FileNameSizes;   //文件名称长度(字节)
-    qint64 m_FileNames;    //接收的文件名
+    QString m_FileNames;    //接收的文件名
     QFile *m_LocalFiles;    //本地文件对象指针(用于保存接收文件)
     QByteArray m_InBlaocks; //接收数据缓冲区(存储文件数据块)
 

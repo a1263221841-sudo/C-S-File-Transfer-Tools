@@ -69,6 +69,7 @@ private:
 
     //自定义槽函数
 private slots:
+
     void OnConnectedFunc();//客户端连接服务器
     void OnDisconnectedFunc();//客户端与服务器断开
     void OnSocketReadyReadFunc();//读取服务器socket传输的数据信息

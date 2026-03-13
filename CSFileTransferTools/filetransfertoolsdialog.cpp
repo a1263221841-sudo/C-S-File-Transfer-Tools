@@ -133,16 +133,22 @@ void FileTransferToolsDialog::OnNewConnectionFunc()//处理新连接请求(当�
         connect(P_TCPFileScoketObject,SIGNAL(connected()),this,SLOT(OnFileClientConnectedFunc()));
         //connect(P_TCPFileScoketObject,&QTcpSocket::connected,this,&FileTransferToolsDialog::OnClientConnectedFunc);
         connect(P_TCPFileScoketObject,&QTcpSocket::disconnected,this,&FileTransferToolsDialog::OnClientDisconnectedFunc);
-        connect(P_TCPFileScoketObject,&QTcpSocket::readyRead,this,&FileTransferToolsDialog::OnSocketReadyReadFunc);
+        connect(P_TCPFileScoketObject,&QTcpSocket::readyRead,this,&FileTransferToolsDialog::UpdateServerProgressFunc);
         //connect(P_TCPFileScoketObject,&QTcpSocket::errorOccurred,this,&FileTransferToolsDialog::DisplayErrorInfoFunc);  5.15版之后的写法
-        connect(P_TCPFileScoketObject,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(DisplayErrorInfoFunc()));
+        //connect(P_TCPFileScoketObject,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(DisplayErrorInfoFunc()));
+        connect(P_TCPFileScoketObject,
+                static_cast<void (QTcpSocket::*)(QAbstractSocket::SocketError)>(&QTcpSocket::error),
+                this,
+                &FileTransferToolsDialog::DisplayErrorInfoFunc);
+        ui->plainTextEdit_ListMsg->appendPlainText("[文件传输通道已连接]");
     }
     ui->plainTextEdit_ListMsg->appendPlainText("\n[******有客户端连接*******");
+
 }
 
 //文本通道槽函数
 //void FileTransferToolsDialog::OnClientConnectedFunc()  //文本socket连接成功处理
-//{   暂时留着
+//{  
 
 //}
 void FileTransferToolsDialog::OnClientDisconnectedFunc()//文本socket断开连接处理
@@ -159,7 +165,7 @@ void FileTransferToolsDialog::OnSocketReadyReadFunc()//读取客户端发送的�
     //读取并显示客户端消息
     while (P_TCPTextScoketObject->canReadLine()) //检查是否有完整的行数据可读
     {
-        ui->plainTextEdit_ListMsg->appendPlainText("[客服端消息 "+strtemp+"]:"+P_TCPTextScoketObject->readLine());
+       ui->plainTextEdit_ListMsg->appendPlainText("[客户端消息 "+strtemp+"]:"+P_TCPTextScoketObject->readLine());
     }
 }
 
@@ -192,6 +198,7 @@ void FileTransferToolsDialog::UpdateServerProgressFunc()//更新文件接收进�
         if((P_TCPFileScoketObject->bytesAvailable()>=sizeof(qint64)*2)&& (m_FileNameSizes==0))
         {
             in>>m_FileTotalBytes>>m_FileNameSizes;
+            qDebug()<<"文件总大小:"<<m_FileTotalBytes<<"文件名长度:"<<m_FileNameSizes;
             m_FileBytesReceived += sizeof(qint64)*2;
         }
 
@@ -199,20 +206,38 @@ void FileTransferToolsDialog::UpdateServerProgressFunc()//更新文件接收进�
     if((P_TCPFileScoketObject->bytesAvailable() >=m_FileNameSizes) &&(m_FileNameSizes !=0))
     {
         // 读取文件名
-        in>>m_FileNames;
+       // in>>m_FileNames;
+        // 直接读取原始字节（假设文件名是UTF-8编码）
+           QByteArray fileNameData = P_TCPFileScoketObject->read(m_FileNameSizes);
+           m_FileNames = QString::fromUtf8(fileNameData);
+           qDebug()<<"接收到的文件名:"<<m_FileNames;
+
+
+
         // 显示日志
-        ui->plainTextEdit_ListMsg->appendPlainText(tr("[%1 开始接受文件 %2  ...]").arg(strtemp).arg(m_FileNames));
+        ui->plainTextEdit_ListMsg->appendPlainText(tr("[%1 开始接收文件 %2  ...]").arg(strtemp).arg(m_FileNames));
         // 更新已接收字节数
-        m_FileBytesReceived += m_FileNameSizes;
+
+        //更新已接收到的字节数(16字节数+文件名长度)
+        m_FileBytesReceived =sizeof(qint64)*2 +m_FileNameSizes;
+        //m_FileBytesReceived += m_FileNameSizes;
 
         //创建本地文件,路径是程序目录+文件名称
-        m_LocalFiles = new QFile(QApplication::applicationDirPath()+ "\\" +m_FileNames);
+        m_LocalFiles = new QFile(QApplication::applicationDirPath()+ "/" +m_FileNames);
+
+        QString filePath = QApplication::applicationDirPath() + "/" + m_FileNames;
+        qDebug() << "尝试打开文件:" << filePath;
 
         if(!m_LocalFiles->open(QFile::WriteOnly))
         {
             qDebug()<<"文件打开失败,请重新检查?";
             delete m_LocalFiles;
             m_LocalFiles=nullptr;
+            // 重置状态变量，防止后续 readyRead 误操作
+               m_FileTotalBytes = 0;
+               m_FileBytesReceived = 0;
+               m_FileNameSizes = 0;
+               m_FileNames.clear();
             return;
 
         }
@@ -225,6 +250,7 @@ void FileTransferToolsDialog::UpdateServerProgressFunc()//更新文件接收进�
     //第二阶段:接受文件内容
     if(m_FileBytesReceived<m_FileTotalBytes)// 如果还没收完
     {
+
         //读取所有可用的数据(可能一次性读取多个数据包)
         m_InBlaocks=P_TCPFileScoketObject->readAll();
 
@@ -359,3 +385,4 @@ void FileTransferToolsDialog::on_pushButton_SendMsg_clicked()
     P_TCPTextScoketObject->write((strMsg+"\n").toUtf8());
     ui->plainTextEdit_EditMsg->clear();
 }
+
