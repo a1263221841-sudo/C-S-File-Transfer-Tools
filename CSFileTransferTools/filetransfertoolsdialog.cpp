@@ -206,10 +206,13 @@ void FileTransferToolsDialog::UpdateServerProgressFunc()//更新文件接收进�
     if((P_TCPFileScoketObject->bytesAvailable() >=m_FileNameSizes) &&(m_FileNameSizes !=0))
     {
         // 读取文件名
-       // in>>m_FileNames;
+       in>>m_FileNames;
         // 直接读取原始字节（假设文件名是UTF-8编码）
-           QByteArray fileNameData = P_TCPFileScoketObject->read(m_FileNameSizes);
-           m_FileNames = QString::fromUtf8(fileNameData);
+//           QByteArray fileNameData = P_TCPFileScoketObject->read(m_FileNameSizes);
+//           qDebug() << "实际读取字节数:" << fileNameData.size();
+//              qDebug() << "原始数据(hex):" << fileNameData.toHex();
+//              qDebug() << "原始数据(ASCII):" << fileNameData;
+//           m_FileNames = QString::fromUtf8(fileNameData);
            qDebug()<<"接收到的文件名:"<<m_FileNames;
 
 
@@ -219,14 +222,15 @@ void FileTransferToolsDialog::UpdateServerProgressFunc()//更新文件接收进�
         // 更新已接收字节数
 
         //更新已接收到的字节数(16字节数+文件名长度)
-        m_FileBytesReceived =sizeof(qint64)*2 +m_FileNameSizes;
-        //m_FileBytesReceived += m_FileNameSizes;
+//       m_FileBytesReceived =sizeof(qint64)*2 +m_FileNameSizes;
+        m_FileBytesReceived += m_FileNameSizes;
 
         //创建本地文件,路径是程序目录+文件名称
-        m_LocalFiles = new QFile(QApplication::applicationDirPath()+ "/" +m_FileNames);
+//        m_LocalFiles = new QFile(QApplication::applicationDirPath()+ "/" +m_FileNames);
 
-        QString filePath = QApplication::applicationDirPath() + "/" + m_FileNames;
-        qDebug() << "尝试打开文件:" << filePath;
+//        QString filePath = QApplication::applicationDirPath() + "/" + m_FileNames;
+        m_LocalFiles= new QFile(QApplication::applicationDirPath() + "\\" + m_FileNames);
+//        qDebug() << "尝试打开文件:" << filePath;
 
         if(!m_LocalFiles->open(QFile::WriteOnly))
         {
